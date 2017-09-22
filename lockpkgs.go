@@ -6,11 +6,6 @@ import (
     "os"
 )
 
-type Packages struct {
-    DevDeps map[string]string `json:"devDependencies"`
-    Deps map[string]string `json:"depedencies"`
-}
-
 func main() {
     fmt.Printf("Let's do stupid stuff.\n")
 
@@ -22,11 +17,28 @@ func main() {
 
     defer file.Close()
 
-    var pkgs Packages
+    // just decode all the shit into this shit
+    var pkgs map[string]interface{}
 
     err = json.NewDecoder(file).Decode(&pkgs)
 
     if err != nil {
         panic(err)
     }
+
+    // hey we got a lot of shit!
+    for k, v := range pkgs {
+        if k == "devDependencies"  || k == "dependencies" {
+            fmt.Println("Value:", v)
+            deps := v.(map[string]interface{})
+            for module, version := range deps {
+                deps[module] = "changed"
+                fmt.Println("Module:", module, "Version:", version)
+            }
+            break
+        }
+    }
+
+    enc := json.NewEncoder(os.Stdout)
+    enc.Encode(pkgs)
 }
